@@ -1,0 +1,77 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: true
+          lower-case-service-id: true
+      routes:
+        - id: eureka-server
+          uri: lb://eureka-server
+          predicates:
+            - Path=/eureka/**
+          filters:
+            - RewritePath=/eureka/(?<segment>.*), /$\{segment}
+            - AddRequestHeader=X-Gateway-Request, true
+        # Add more routes for your microservices here
+
+    # Circuit Breaker Configuration
+    circuitbreaker:
+      resilience4j:
+        enabled: true
+        circuitbreakers:
+          default:
+            registerHealthIndicator: true
+            slidingWindowSize: 100
+            minimumNumberOfCalls: 10
+            slidingWindowType: COUNT_BASED
+            permittedNumberOfCallsInHalfOpenState: 3
+            waitDurationInOpenState: 60s
+            failureRateThreshold: 50
+            slowCallRateThreshold: 50
+            slowCallDurationThreshold: 2s
+            
+  # Security Configuration
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:8180/auth/realms/microservices-realm
+          jwk-set-uri: http://localhost:8180/auth/realms/microservices-realm/protocol/openid-connect/certs
+
+# Eureka Client Configuration
+eureka:
+  client:
+    register-with-eureka: true
+    fetch-registry: true
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+  instance:
+    preferIpAddress: true
+    hostname: api-gateway
+
+# Actuator Endpoints
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    health:
+      show-details: always
+  health:
+    circuitbreakers:
+      enabled: true
+
+# Logging
+logging:
+  level:
+    root: INFO
+    org.springframework.cloud.gateway: DEBUG
+    org.springframework.security: DEBUG
+    reactor.netty: INFO

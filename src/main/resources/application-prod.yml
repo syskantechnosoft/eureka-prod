@@ -1,0 +1,74 @@
+# Production profile configuration
+spring:
+  # Data source configuration - use env variables
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+
+  # MongoDB configuration
+  data:
+    mongodb:
+      uri: ${MONGODB_URI}
+  # Redis Configuration
+    redis:
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
+      password: ${REDIS_PASSWORD}
+
+  # JPA configuration for production
+  jpa:
+    hibernate:
+      ddl-auto: none
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+  # Disable H2 console in production
+  h2:
+    console:
+      enabled: false
+
+  # Security hardening
+  security:
+    require-ssl: true
+
+  # Enable vault in production
+  cloud:
+    vault:
+      enabled: true
+      token: ${VAULT_TOKEN}
+
+# Eureka configuration for production
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_SERVICE_URL:http://eureka-server:8761/eureka-server/eureka/}
+  instance:
+    hostname: ${EUREKA_HOSTNAME:eureka-server}
+    prefer-ip-address: false
+
+# Secure actuator endpoints
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+
+# TLS/SSL Configuration
+server:
+  ssl:
+    enabled: true
+    key-store: ${KEY_STORE}
+    key-store-password: ${KEY_STORE_PASSWORD}
+    key-store-type: ${KEY_STORE_TYPE:PKCS12}
+    key-alias: ${KEY_ALIAS}
+
+# Logging configuration - use JSON for production
+logging:
+  level:
+    root: WARN
+    com.example.eurekaserver: INFO
+  pattern:
+    console: '{"timestamp":"%date{ISO8601}","level":"%level","thread":"%thread","logger":"%logger","message":"%message","exception":"%exception"}%n'

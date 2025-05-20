@@ -1,0 +1,118 @@
+#version: '3.8'
+#
+#services:
+#  eureka-server:
+#    build: .
+#    container_name: eureka-server
+#    ports:
+#      - "8761:8761"
+#    environment:
+#      - SPRING_PROFILES_ACTIVE=local,docker
+#      - REDIS_HOST=redis
+#      - REDIS_PASSWORD=redis123
+#      - VAULT_HOST=vault
+#      - VAULT_TOKEN=myroot
+#      - ADMIN_PASSWORD=securepassword
+#    networks:
+#      - microservice-network
+#    depends_on:
+#      - redis
+#      - vault
+#      - config-server
+#    healthcheck:
+#      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8761/actuator/health"]
+#      interval: 30s
+#      timeout: 10s
+#      retries: 5
+#
+#  config-server:
+#    image: config-server:latest # You'd need to build this separately
+#    container_name: config-server
+#    ports:
+#      - "8888:8888"
+#    volumes:
+#      - ./config-repo:/config-repo
+#    environment:
+#      - SPRING_PROFILES_ACTIVE=native
+#      - SPRING_CLOUD_CONFIG_SERVER_NATIVE_SEARCH_LOCATIONS=file:/config-repo
+#    networks:
+#      - microservice-network
+#    healthcheck:
+#      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8888/actuator/health"]
+#      interval: 30s
+#      timeout: 10s
+#      retries: 5
+#
+#  redis:
+#    image: redis:7.0-alpine
+#    container_name: redis
+#    ports:
+#      - "6379:6379"
+#    command: redis-server --requirepass redis123
+#    volumes:
+#      - redis-data:/data
+#    networks:
+#      - microservice-network
+#    healthcheck:
+#      test: ["CMD", "redis-cli", "-a", "redis123", "ping"]
+#      interval: 30s
+#      timeout: 10s
+#      retries: 5
+#
+#  vault:
+#    image: hashicorp/vault:1.13
+#    container_name: vault
+#    ports:
+#      - "8200:8200"
+#    environment:
+#      - VAULT_DEV_ROOT_TOKEN_ID=myroot
+#      - VAULT_DEV_LISTEN_ADDRESS=0.0.0.0:8200
+#    cap_add:
+#      - IPC_LOCK
+#    networks:
+#      - microservice-network
+#    healthcheck:
+#      test: ["CMD", "vault", "status"]
+#      interval: 30s
+#      timeout: 10s
+#      retries: 5
+#
+#  prometheus:
+#    image: prom/prometheus:v2.45.0
+#    container_name: prometheus
+#    ports:
+#      - "9090:9090"
+#    volumes:
+#      - ./prometheus:/etc/prometheus
+#      - prometheus-data:/prometheus
+#    command:
+#      - '--config.file=/etc/prometheus/prometheus.yml'
+#      - '--storage.tsdb.path=/prometheus'
+#    networks:
+#      - microservice-network
+#    depends_on:
+#      - eureka-server
+#
+#  grafana:
+#    image: grafana/grafana:10.0.0
+#    container_name: grafana
+#    ports:
+#      - "3000:3000"
+#    volumes:
+#      - grafana-data:/var/lib/grafana
+#    environment:
+#      - GF_SECURITY_ADMIN_PASSWORD=admin
+#      - GF_USERS_ALLOW_SIGN_UP=false
+#    networks:
+#      - microservice-network
+#    depends_on:
+#      - prometheus
+#
+#networks:
+#  microservice-network:
+#    driver: bridge
+#
+#volumes:
+#  redis-data:
+#  prometheus-data:
+#  grafana-data:

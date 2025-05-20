@@ -1,0 +1,210 @@
+# Server configuration
+server:
+  port: 8761
+  servlet:
+    context-path: /eureka-server
+  compression:
+    enabled: true
+  http2:
+    enabled: true
+  shutdown: graceful
+
+# Application name
+spring:
+  application:
+    name: eureka-server
+
+  # Profiles configuration
+  profiles:
+    active: dev
+
+  # Data source configuration
+  datasource:
+    url: jdbc:postgresql://localhost:5432/eureka_db
+    username: ${POSTGRES_USER:postgres}
+    password: ${POSTGRES_PASSWORD:password}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      connection-timeout: 20000
+      maximum-pool-size: 10
+      minimum-idle: 5
+      idle-timeout: 300000
+      max-lifetime: 1200000
+
+  # H2 configuration for development
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+      settings:
+        web-allow-others: false
+
+  # MongoDB configuration
+  data:
+    mongodb:
+      uri: mongodb://localhost:27017/eureka_db
+      auto-index-creation: true
+# Redis configuration
+#		redis:
+#		  host: localhost
+#			port: 6379
+#			password: ${REDIS_PASSWORD:}
+#			timeout: 2000
+
+  
+
+  # JPA configuration
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+    show-sql: false
+
+  # Security configuration
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: ${OAUTH_GOOGLE_CLIENT_ID:}
+            client-secret: ${OAUTH_GOOGLE_CLIENT_SECRET:}
+          github:
+            client-id: ${OAUTH_GITHUB_CLIENT_ID:}
+            client-secret: ${OAUTH_GITHUB_CLIENT_SECRET:}
+      resourceserver:
+        jwt:
+          issuer-uri: ${JWT_ISSUER_URI:http://localhost:8080/auth/realms/eureka}
+          jwk-set-uri: ${JWT_JWK_SET_URI:http://localhost:8080/auth/realms/eureka/protocol/openid-connect/certs}
+
+  # Vault configuration
+  cloud:
+    vault:
+      host: localhost
+      port: 8200
+      scheme: http
+      authentication: TOKEN
+      token: ${VAULT_TOKEN:myroot}
+      kv:
+        enabled: true
+        backend: secret
+        default-context: eureka
+
+# Eureka client configuration
+eureka:
+  client:
+    register-with-eureka: false
+    fetch-registry: false
+    service-url:
+      defaultZone: http://localhost:8761/eureka-server/eureka/
+  server:
+    enable-self-preservation: true
+    renewal-percent-threshold: 0.85
+    eviction-interval-timer-in-ms: 30000
+    response-cache-update-interval-ms: 30000
+  instance:
+    hostname: localhost
+    prefer-ip-address: true
+    lease-renewal-interval-in-seconds: 30
+    lease-expiration-duration-in-seconds: 90
+
+# Actuator configuration
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,loggers,beans,env,configprops,scheduledtasks
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: always
+      probes:
+        enabled: true
+  prometheus:
+    metrics:
+      export:
+        enabled: true
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
+      slo:
+        http.server.requests: 50ms, 100ms, 200ms, 500ms, 1000ms
+  tracing:
+    sampling:
+      probability: 1.0
+  info:
+    env:
+      enabled: true
+    java:
+      enabled: true
+    os:
+      enabled: true
+
+# Chaos Monkey configuration
+chaos:
+  monkey:
+    enabled: false
+    watcher:
+      component: false
+      controller: false
+      repository: false
+      rest-controller: false
+      service: false
+    assaults:
+      level: 1
+      latency-active: false
+      latency-range-start: 1000
+      latency-range-end: 3000
+      exceptions-active: false
+      kill-application-active: false
+      memory-active: false
+      memory-fill-increment: 100
+      memory-fill-chunk-size: 1048576
+      memory-leak-active: false
+
+# Springdoc OpenAPI configuration
+springdoc:
+  api-docs:
+    enabled: true
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    tagsSorter: alpha
+    operationsSorter: method
+  packages-to-scan: com.example.eurekaserver
+  show-actuator: true
+
+# JWT configuration
+jwt:
+  secret: ${JWT_SECRET:mySecretKey}
+  expiration: 86400000 # 24 hours in milliseconds
+  issuer: eureka-server
+
+# Logging configuration
+logging:
+  level:
+    root: INFO
+    org.springframework: INFO
+    com.syskan.eureka: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: logs/eureka-server.log
+    max-size: 10MB
+    max-history: 10
+
+# DataDog configuration
+dd:
+  trace:
+    enabled: true
+    agent:
+      host: localhost
+      port: 8126
+    global-tags: env:dev,service:eureka-server
+    report-hostname: true
+    sample-rate: 1.0

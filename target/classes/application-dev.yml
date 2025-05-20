@@ -1,0 +1,40 @@
+# Development profile configuration
+spring:
+  datasource:
+    # Use H2 database for development
+    url: jdbc:h2:mem:testdb
+    username: sa
+    password: 
+    driver-class-name: org.h2.Driver
+
+  # JPA specific config for H2
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: update
+
+  # Disable vault for development
+  cloud:
+    vault:
+      enabled: false
+
+# Set chaos monkey to false in dev
+chaos:
+  monkey:
+    enabled: false
+
+# Enable all debug endpoints in development
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+
+# Set detailed logging for development
+logging:
+  level:
+    root: INFO
+    com.syskan.eureka: DEBUG
+    org.springframework.web: DEBUG
+    org.springframework.security: DEBUG
+    org.springframework.data: DEBUG
